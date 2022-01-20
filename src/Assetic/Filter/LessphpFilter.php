@@ -3,6 +3,7 @@
 use Assetic\Contracts\Asset\AssetInterface;
 use Assetic\Contracts\Filter\DependencyExtractorInterface;
 use Assetic\Factory\AssetFactory;
+use Assetic\Filter\BaseFilter;
 use Assetic\Util\LessUtils;
 
 /**
@@ -23,6 +24,7 @@ class LessphpFilter extends BaseFilter implements DependencyExtractorInterface
     private $options = [
         'compress' => true
     ];
+    private $customFunctions = [];
 
     /**
      * Lessphp Load Paths
@@ -61,6 +63,11 @@ class LessphpFilter extends BaseFilter implements DependencyExtractorInterface
         $this->options = $options;
     }
 
+    public function registerFunction($name, $callable)
+    {
+        $this->customFunctions[$name] = $callable;
+    }
+
     /**
      * @param string $formatter One of "lessjs", "compressed", or "classic".
      */
@@ -78,6 +85,10 @@ class LessphpFilter extends BaseFilter implements DependencyExtractorInterface
 
         foreach ($this->loadPaths as $loadPath) {
             $lc->addImportDir($loadPath);
+        }
+
+        foreach ($this->customFunctions as $name => $callable) {
+            $lc->registerFunction($name, $callable);
         }
 
         if ($this->formatter) {
