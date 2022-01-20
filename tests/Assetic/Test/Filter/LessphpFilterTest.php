@@ -4,6 +4,7 @@ use Assetic\Asset\FileAsset;
 use Assetic\Asset\StringAsset;
 use Assetic\Factory\AssetFactory;
 use Assetic\Filter\LessphpFilter;
+use ScssPhp\ScssPhp\ValueConverter;
 
 /**
  * @property LessphpFilter $filter
@@ -162,5 +163,23 @@ class LessphpFilterTest extends FilterTestCase
             array('@import-once url("main");'),
             array('@import-once url(main);'),
         );
+    }
+
+    /**
+     * @group integration
+     */
+    public function testRegisterFunction()
+    {
+        $asset = new StringAsset('.foo { color: bar(); }');
+        $asset->load();
+
+        $this->filter->registerFunction('bar', function () { return 'red';});
+        $this->filter->filterLoad($asset);
+
+        $expected = new StringAsset('.foo { color: red; }');
+        $expected->load();
+        $this->filter->filterLoad($expected);
+
+        $this->assertEquals($expected->getContent(), $asset->getContent(), 'custom function can be registered');
     }
 }
